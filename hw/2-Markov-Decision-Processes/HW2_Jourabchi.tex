@@ -1,0 +1,98 @@
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{physics}        % derivatives, bras/kets, etc.
+\usepackage{siunitx}        % units
+\usepackage{graphicx}       % figures
+\usepackage{float}          % figure placement
+\usepackage{booktabs}       % nice tables
+\usepackage{enumitem}       % better lists
+\usepackage{fancyhdr}       % header/footer
+\usepackage{titlesec}       % section formatting
+\usepackage{hyperref}       % links
+\usepackage{tcolorbox}      % boxes for answers
+\usepackage{listings}       % code (MATLAB, Python, etc.)
+\usepackage{xcolor}
+
+% ---------- Hyperref Setup ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% ---------- Header/Footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textbf{\course}}
+\rhead{\textbf{\assignment}}
+\cfoot{\thepage}
+
+% ---------- Custom Commands ----------
+\newcommand{\course}{ASEN 5264 - DMU}
+\newcommand{\assignment}{Homework \#2}
+\newcommand{\studentname}{Bijan Jourabchi}
+
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+
+% Boxed answer environment
+\newtcolorbox{answerbox}{
+    colback=gray!5,
+    colframe=gray!50,
+    title=Answer,
+    fonttitle=\bfseries
+}
+
+% Problem section format
+\titleformat{\section}{\large\bfseries}{Problem \thesection:}{0.5em}{}
+
+% ---------- Code Style ----------
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{orange},
+    breaklines=true,
+    frame=single
+}
+
+% ---------- Document ----------
+\begin{document}
+
+% ---------- Title Block ----------
+\begin{center}
+    {\LARGE \textbf{\course}} \\[6pt]
+    {\Large \assignment} \\[10pt]
+    \studentname \\
+\end{center}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+% =====================================================
+\section{}
+
+\begin{enumerate}[label=\alph*)]
+    \item 
+    $R$ (reward function) maps each state and action to a reward. In other words, for a given state $S$
+    and action $A$, the reward function tells what reward we will get from taking that action. The state-action value
+    function ($Q$) represents the expected return when starting in state $S$ and taking action $A$. In other words, $Q$
+    can quantify our expected reward if we were to continuing with greedy policies.
+    \item
+    \[Q(S,A) = R(S,A) + \gamma \sum_{S'} T(S' \mid S,A ) V(S')\]
+\end{enumerate}
+
+\section{}
+
+\section{}
+
+\end{document}

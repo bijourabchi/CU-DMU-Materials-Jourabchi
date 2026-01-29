@@ -18,7 +18,7 @@ differ from this considerably.
 # Question 3
 ############
 
-@show actions(grid_world) # prints the actions. In this case each action is a Symbol. Use ?Symbol to find out more.
+@show actions(grid_world) # prints the] actions. In this case each action is a Symbol. Use ?Symbol to find out more.
 
 T = transition_matrices(grid_world)
 display(T) # this is a Dict that contains a transition matrix for each action
@@ -41,7 +41,7 @@ function value_iteration(m)
 end
 
 # You can use the following commented code to display the value. If you are in an environment with multimedia capability (e.g. Jupyter, Pluto, VSCode, Juno), you can display the environment with the following commented code. From the REPL, you can use the ElectronDisplay package.
-# display(render(grid_world, color=V))
+#display(render(grid_world, color=V))
 
 ############
 # Question 4
