@@ -17,6 +17,13 @@
 \usepackage{listings}       % code (MATLAB, Python, etc.)
 \usepackage{xcolor}
 
+% Define colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+
+
 % ---------- Hyperref Setup ----------
 \hypersetup{
     colorlinks=true,
@@ -86,13 +93,269 @@
     $R$ (reward function) maps each state and action to a reward. In other words, for a given state $S$
     and action $A$, the reward function tells what reward we will get from taking that action. The state-action value
     function ($Q$) represents the expected return when starting in state $S$ and taking action $A$. In other words, $Q$
-    can quantify our expected reward if we were to continuing with greedy policies.
+    can quantify our expected reward if we were to continue with greedy policies.
     \item
     \[Q(S,A) = R(S,A) + \gamma \sum_{S'} T(S' \mid S,A ) V(S')\]
 \end{enumerate}
 
 \section{}
 
+\begin{enumerate}[label=\alph*)]
+    \item 
+    \( S = [1,2,3,4]\) \newline
+    \(A = [\mathrm{roll}, \mathrm{step}]\) \newline
+    \( T^{\mathrm{roll}} = 
+        \begin{bmatrix}
+            0 & 0.5 & 0.5 & 0 \\
+            0 & 0 & 0.5 & 0.5 \\
+            0 & 0 & 0 & 1 \\
+            0 & 0 & 0 & 1 
+        \end{bmatrix}
+    \)
+
+    \(
+        T^{\mathrm{step}} = 
+        \begin{bmatrix}
+            0 & 1 & 0 & 0 \\
+            0 & 0 & 1 & 0 \\
+            0 & 0 & 0 & 1 \\
+            0 & 0 & 0 & 1 
+        \end{bmatrix}
+    \) \newline
+
+    \(
+        R = \begin{cases}
+        -1 & \text{if } S = 2, A = \mathrm{step} \\
+        +3 & \text{if } S = 3, A = \mathrm{step} \\
+        0 &  \mathrm{otherwise}
+        \end{cases}
+    \)
+
+    \item
+    
+    Given $Q^*(s,a) = R(s,a) + \gamma  \sum T(S' \mid S,A ) V(S')$\newline
+    Since $S = 4$ is a terminal state, we can begin the iterative process at $S=4$ and work down, giving 
+    us the following:
+
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    S & A    & $Q^*$ & $V^*$ \\ \hline
+    4 & N/A  & 0                  & 0                    \\ \hline
+    3 & Step & 3                    & 3                    \\ \hline
+    3 & Roll & 0                    &                      \\ \hline
+    2 & Step & 1.825                & 1.85                 \\ \hline
+    2 & Roll & 1.424                &                      \\ \hline
+    1 & Step & 1.7575               & 2.30375              \\ \hline
+    1 & Roll & 2.30375              &                      \\ \hline
+    \end{tabular}
+
+    Thus, the optimal policy for this game is as follows:
+    \[
+        \pi^* = \begin{cases}
+        \mathrm{Roll} & \text{if } S = 1 \\
+        \mathrm{Step} & \text{if } S = 2 \\
+        \mathrm{Step} & \text{if } S = 3 \\
+        \end{cases}
+    \]
+
+
+\end{enumerate}
+
 \section{}
+
+\begin{enumerate}[label=\alph*)]
+    \item 
+    \( S = [L,M,R]\)
+
+    \(A = [\mathrm{roll}, \mathrm{reset}]\) \newline
+
+    For the transition probability, let $p$ be the probability
+    the dice lands on an odd number, thus $P(\mathrm{even}) = 1-p$.  
+
+    \( T^{\mathrm{roll}} = 
+        \begin{bmatrix}
+            0 & p & 1-p  \\
+            0 & 0 & 1  \\
+            0 & 0 & 1  
+        \end{bmatrix}
+    \)
+
+    \(
+        T^{\mathrm{reset}} = 
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            1 & 0 & 0 \\
+            1 & 0 & 0 
+        \end{bmatrix}
+    \) \newline
+
+    \(
+        R = \begin{cases}
+        +2 & \text{if } S = M, A = \mathrm{reset} \\
+        -1 & \text{if } S = R, A = \mathrm{reset} \\
+        0 & \mathrm{otherwise}
+        \end{cases}
+    \)
+    \item
+    
+    To evaluate the given policy, we can use the Bellman Expectation equation:
+    \[U^{\pi}(s) = R(s,\pi(s)) + \gamma \sum_{s' \in S} T(s' \mid s, \pi(s))U^{\pi}(s')\]
+    Or, in matrix-vector form as:
+    
+    \[
+        \vec{U^{\pi}} = (I - \gamma T^{\pi})^{-1}\vec{R^{\pi}}
+    \]
+
+    Where $I$ is the $s\times s$ identity matrix, $T^{\pi}$ is the transition probabilities using the given policy at a state $s$. Solving for
+    $U^{\pi}(s)$, letting $p = 0.5$ for a fair dice:
+    \[
+        \vec{U^{\pi}} = \Big(
+            \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & 1 & 0 \\
+                0 & 0 & 1
+            \end{bmatrix} - 0.95
+            \begin{bmatrix}
+                0 & 0.5 & 0.5 \\
+                1 & 0 & 0 \\
+                1 & 0 & 0
+            \end{bmatrix}\Big)^{-1}
+            \begin{bmatrix}
+                0 \\ 2 \\ -1
+            \end{bmatrix}         
+    \] 
+
+    \[
+        = \begin{bmatrix}
+        1 & -0.475 & -0.475 \\
+        -0.95 & 1 & 0 \\
+        -0.95 & 0 & 1
+        \end{bmatrix} ^ {-1}    
+        \begin{bmatrix}
+            0 \\ 2 \\ -1
+        \end{bmatrix} 
+    \]
+
+    \[  
+    \boxed{ \vec{U^{\pi}} =  
+    \begin{bmatrix}
+        4.8718 \\ 6.6282 \\ 3.6282
+    \end{bmatrix}  }
+    \]
+
+    \item
+        For any given policy, if the reward can be bounded, $r_{\min} \leq r \leq r_{\max}$, then we can give finite upper and lower bounds 
+        for the expected discount score we can receive with the following formula:
+        \[
+        \frac{r_{\min}}{1-\gamma} \leq \sum^\infty_{t=0} \gamma^t r_t \leq \frac{r_{\max}}{1-\gamma}
+        \]
+
+        From our reward funciton, we see that $r_{\min} = -1, r_{\max} = 2$. Subbing this into our expression we get the
+        following upper and lower bounds with $\gamma = 0.95$:
+
+        \[
+        \boxed{
+            -20 \leq \sum^\infty_{t=0} \gamma^t r_t \leq 40
+        }
+        \]
+\end{enumerate}
+
+\section{}
+
+Code for problem's 4 and 5 are below:
+
+% Define Julia language manually
+\lstdefinelanguage{Julia}{
+  keywords={abstract, break, case, catch, const, continue, do, else, elseif,
+      end, export, false, for, function, global, if, import, in, let, local,
+      macro, module, otherwise, quote, return, struct, switch, true, try,
+      type, typealias, using, while, mutable},
+  keywordstyle=\color{blue}\bfseries,
+  comment=[l]{\#},
+  morecomment=[n]{\#=}{=\#},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% General Listing Settings
+\lstset{
+    language=Julia,
+    backgroundcolor=\color{backcolour},   
+    basicstyle=\ttfamily\small,
+    breaklines=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    frame=single
+}
+
+\begin{lstlisting}
+import Cairo
+import Fontconfig
+
+using DMUStudent.HW2
+using POMDPs: states, actions, discount
+using POMDPTools: ordered_states, render
+
+############
+# Question 3
+############
+
+
+function value_iteration(m)
+
+    # Problem Setup
+    A = actions(m)
+    T = transition_matrices(m, sparse = true)
+    R = reward_vectors(m)
+    S = states(m)
+    gamma = discount(m)
+    tol = 1e-6
+    n_states = length(S)
+    n_actions = length(A) 
+
+    # Value fxn initialization
+    V = ones(n_states)
+    V_prev = zeros(n_states)
+
+    # State Value fxn
+    Q = zeros(n_states,n_actions)
+
+    while maximum(abs.(V-V_prev))  > tol
+
+        V = copy(V_prev)
+
+        for (i,a) in enumerate(A)
+            # R -> [S, 1], T-> [S x S], V -> [S x 1]
+            Q[:, i] = R[a] + gamma * (T[a] * V)
+        end
+
+        V_prev = vec(maximum(Q, dims=2)) # Col wise max
+ 
+    end
+
+    return V
+end
+
+@show actions(grid_world) 
+V = value_iteration(grid_world)
+render(grid_world, color = V)
+
+#for V in V_hist
+#    render(grid_world, color = V)
+#end
+
+############
+# Question 4
+############
+
+m = UnresponsiveACASMDP(20)
+
+
+V = value_iteration(m)
+@show HW2.evaluate(V, "bijan.jourabchi@colorado.edu")
+\end{lstlisting}
+
 
 \end{document}
