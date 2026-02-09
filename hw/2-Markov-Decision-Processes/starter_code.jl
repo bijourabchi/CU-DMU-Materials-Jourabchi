@@ -41,6 +41,8 @@ function value_iteration(m)
     return V
 end
 
+# You can use the following commented code to display the value. If you are in an environment with multimedia capability (e.g. Jupyter, Pluto, VSCode, Juno), you can display the environment with the following commented code. From the REPL, you can use the ElectronDisplay package.
+#display(render(grid_world, color=V))
 V = rand(length(states(grid_world)))*10.0 # replace this with value_iteration(m)
 # If you are in an environment with multimedia capability (e.g. VSCode, Jupyter, Pluto), use this:
 display(render(grid_world, color=V)) # In the REPL, this will output an annoying amount of text
