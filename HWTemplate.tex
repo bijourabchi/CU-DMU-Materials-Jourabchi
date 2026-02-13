@@ -1,0 +1,99 @@
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage[margin=1in]{geometry}
+\usepackage{fullpage,amsmath,amsthm,graphicx,enumitem,amssymb}
+\usepackage{mathtools}
+\usepackage{physics}        % derivatives, bras/kets, etc.
+\usepackage{siunitx}        % units
+\usepackage{graphicx}       % figures
+\usepackage{float}          % figure placement
+\usepackage{booktabs}       % nice tables
+\usepackage{enumitem}       % better lists
+\usepackage{fancyhdr}       % header/footer
+\usepackage{titlesec}       % section formatting
+\usepackage{hyperref}       % links
+\usepackage{tcolorbox}      % boxes for answers
+\usepackage{listings}       % code (MATLAB, Python, etc.)
+\usepackage{xcolor}
+\usepackage{bbm}        % blackboard bold italic
+
+% ---------- Hyperref Setup ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% ---------- Header/Footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textbf{\course}}
+\rhead{\textbf{\assignment}}
+\cfoot{\thepage}
+
+% ---------- Custom Commands ----------
+\newcommand{\course}{ASEN 5264 - DMU}
+\newcommand{\assignment}{Homework \#3}
+\newcommand{\studentname}{Bijan Jourabchi}
+\newcommand{\studentid}{Student ID}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+
+% Boxed answer environment
+\newtcolorbox{answerbox}{
+    colback=gray!5,
+    colframe=gray!50,
+    title=Answer,
+    fonttitle=\bfseries
+}
+
+% Problem section format
+\titleformat{\section}{\large\bfseries}{Problem \thesection:}{0.5em}{}
+
+% ---------- Code Style ----------
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{orange},
+    breaklines=true,
+    frame=single
+}
+
+% ---------- Document ----------
+\begin{document}
+
+% ---------- Title Block ----------
+\begin{center}
+    {\LARGE \textbf{\course}} \\[6pt]
+    {\Large \assignment} \\[10pt]
+    \studentname \\
+    ID: \studentid \\
+\end{center}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+% =====================================================
+\section{}
+
+
+
+
+
+% =====================================================
+\section{}
+
+
+
+
+
+% =====================================================
+
+\end{document}
