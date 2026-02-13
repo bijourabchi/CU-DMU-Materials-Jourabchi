@@ -57,7 +57,7 @@ render(grid_world, color = V)
 # Question 4
 ############
 
-m = UnresponsiveACASMDP(20)
+m = UnresponsiveACASMDP(2)
 
 
 V = value_iteration(m)
