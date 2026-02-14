@@ -6,7 +6,7 @@ using Statistics: mean, std
 using BenchmarkTools: @btime
 
 ############
-# Question 5
+# Question 6
 ############
 
 
@@ -38,7 +38,7 @@ function smart_policy(m,s)
 
 
     # Find closest goal from CURRENT state
-    goals = [[20,20], [20,40], [40,20], [40,40]]
+    goals = [[20,20], [20,40], [20,60], [20,80], [40,20], [40,40], [40,60], [40,80],[60,20], [60,40], [60,60], [60,80],[80,20], [80,40], [80,60], [80,80]]
     closest_goal_cell = goals[argmin([(x - g[1])^2 + (y - g[2])^2 for g in goals])]
     #@show s
     #@show closest_goal_cell
@@ -53,7 +53,7 @@ function smart_policy(m,s)
 end
 
 ### main MCTS simulation
-function simulate_MCTS(π, s, d = 20)
+function simulate_MCTS(π, s, d = 15)
     
     # Unpack
     m = π.m
@@ -104,42 +104,25 @@ function explore(π, s)
 end
 
 ### Get an action based on MCTS tree
-function policy_(π, s)
+function select_action(m, s)
+    S = statetype(m)
+    A = actiontype(m)
+
+    # These would be appropriate containers for your Q, N, and t dictionaries:
+    n = Dict{Tuple{S, A}, Int}()
+    q = Dict{Tuple{S, A}, Float64}()
+    t = Dict{Tuple{S, A, S}, Int}()
+    c = sqrt(2)
+
+    π = MCTS(m,n,q,t,c)
+
     for k in  1:1000
         simulate_MCTS(π,s) # 1000 iterations to choose each action, d = 100 by default
     end
     return argmax(a -> π.q[(s,a)], actions(π.m))
 end
 
-function online_rollout(m,n,q,t,c)
-    ### Rollout simulation
-
-    r_hist = []
-
-    for j in 1:100
-        
-        println("j = ", j)
-
-        π = MCTS(m,n,q,t,c)
-        s = rand(initialstate(m))
-
-        r = rollout(π,policy_,s)
-
-        push!(r_hist,r)
-    end
-    return r_hist
-end
-
 m = DenseGridWorld()
-
-S = statetype(m)
-A = actiontype(m)
-
-# These would be appropriate containers for your Q, N, and t dictionaries:
-n = Dict{Tuple{S, A}, Int}()
-q = Dict{Tuple{S, A}, Float64}()
-t = Dict{Tuple{S, A, S}, Int}()
-c = sqrt(2)
 
 mutable struct MCTS
     m
@@ -149,7 +132,10 @@ mutable struct MCTS
     c
 end
 
-results = online_rollout(m,n,q,t,c)
+s0 = rand(initialstate(m))
+a = select_action(m, s0)
 
-@show mean(results)
-@show std(results)/sqrt(100)
+@show s0
+@show a
+
+HW3.evaluate(select_action,"bijan.jourabchi@colorado.edu")
