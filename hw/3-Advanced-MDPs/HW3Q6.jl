@@ -4,11 +4,11 @@ using D3Trees: inchrome, inbrowser
 using StaticArrays: SA
 using Statistics: mean, std
 using BenchmarkTools: @btime
-
 ############
 # Question 6
 ############
 
+const goals = ((20,20), (20,40), (20,60), (20,80), (40,20), (40,40), (40,60), (40,80), (60,20), (60,40), (60,60), (60,80), (80,20), (80,40), (80,60), (80,80))
 
 ### rollout sim from state s0
 function rollout(π, policy_function, s0, max_steps=100)
@@ -36,9 +36,7 @@ function smart_policy(m,s)
         (:left, (x-1, y))
     ]
 
-
     # Find closest goal from CURRENT state
-    goals = [[20,20], [20,40], [20,60], [20,80], [40,20], [40,40], [40,60], [40,80],[60,20], [60,40], [60,60], [60,80],[80,20], [80,40], [80,60], [80,80]]
     closest_goal_cell = goals[argmin([(x - g[1])^2 + (y - g[2])^2 for g in goals])]
     #@show s
     #@show closest_goal_cell
@@ -53,7 +51,7 @@ function smart_policy(m,s)
 end
 
 ### main MCTS simulation
-function simulate_MCTS(π, s, d = 15)
+function simulate_MCTS(π, s, d = 4)
     
     # Unpack
     m = π.m
@@ -105,6 +103,7 @@ end
 
 ### Get an action based on MCTS tree
 function select_action(m, s)
+
     S = statetype(m)
     A = actiontype(m)
 
@@ -112,11 +111,11 @@ function select_action(m, s)
     n = Dict{Tuple{S, A}, Int}()
     q = Dict{Tuple{S, A}, Float64}()
     t = Dict{Tuple{S, A, S}, Int}()
-    c = sqrt(2)*100
+    c = 70
 
     π = MCTS(m,n,q,t,c)
 
-    for k in  1:1000
+    Threads.@threads for _ in  1:1000
         simulate_MCTS(π,s) # 1000 iterations to choose each action, d = 100 by default
     end
     return argmax(a -> π.q[(s,a)], actions(π.m))
@@ -132,10 +131,19 @@ mutable struct MCTS
     c
 end
 
-s0 = rand(initialstate(m))
-a = select_action(m, s0)
 
-@show s0
-@show a
+S = statetype(m)
+A = actiontype(m)
 
-HW3.evaluate(select_action,"bijan.jourabchi@colorado.edu")
+n = Dict{Tuple{S, A}, Int}()
+q = Dict{Tuple{S, A}, Float64}()
+t = Dict{Tuple{S, A, S}, Int}()
+c = 70
+
+π = MCTS(m,n,q,t,c)
+
+s = rand(initialstate(m))
+
+#@btime simulate_MCTS(π,s)
+
+HW3.evaluate(select_action,"bijan.jourabchi@colorado.edu",time=true)
