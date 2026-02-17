@@ -17,6 +17,12 @@
 \usepackage{listings}       % code (MATLAB, Python, etc.)
 \usepackage{xcolor}
 \usepackage{bbm}        % blackboard bold italic
+\usepackage{xcolor}
+
+% Define colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
 % ---------- Hyperref Setup ----------
 \hypersetup{
@@ -37,7 +43,6 @@
 \newcommand{\course}{ASEN 5264 - DMU}
 \newcommand{\assignment}{Homework \#3}
 \newcommand{\studentname}{Bijan Jourabchi}
-\newcommand{\studentid}{Student ID}
 
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
@@ -63,6 +68,8 @@
     stringstyle=\color{orange},
     breaklines=true,
     frame=single
+    extendedchars=true,
+    literate={π}{{$\pi$}}1 {γ}{{$\gamma$}}1
 }
 
 % ---------- Document ----------
@@ -73,12 +80,37 @@
     {\LARGE \textbf{\course}} \\[6pt]
     {\Large \assignment} \\[10pt]
     \studentname \\
-    ID: \studentid \\
 \end{center}
 
 \vspace{1em}
 \hrule
 \vspace{1em}
+
+% Define Julia language manually
+\lstdefinelanguage{Julia}{
+  keywords={abstract, break, case, catch, const, continue, do, else, elseif,
+      end, export, false, for, function, global, if, import, in, let, local,
+      macro, module, otherwise, quote, return, struct, switch, true, try,
+      type, typealias, using, while, mutable},
+  keywordstyle=\color{blue}\bfseries,
+  comment=[l]{\#},
+  morecomment=[n]{\#=}{=\#},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% General Listing Settings
+\lstset{
+    language=Julia,
+    backgroundcolor=\color{backcolour},   
+    basicstyle=\ttfamily\small,
+    breaklines=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    frame=single
+}
 
 % =====================================================
 \section{}

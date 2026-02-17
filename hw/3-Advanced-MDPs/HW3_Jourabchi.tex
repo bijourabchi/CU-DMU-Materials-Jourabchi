@@ -21,7 +21,40 @@
 \usetikzlibrary{automata, positioning, arrows.meta, bending, decorations.pathmorphing}
 \usepackage{etoolbox}
 \usepackage{bbm}
+\usepackage{xcolor}
 
+% Define colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Define Julia language manually
+\lstdefinelanguage{Julia}{
+  keywords={abstract, break, case, catch, const, continue, do, else, elseif,
+      end, export, false, for, function, global, if, import, in, let, local,
+      macro, module, otherwise, quote, return, struct, switch, true, try,
+      type, typealias, using, while, mutable},
+  keywordstyle=\color{blue}\bfseries,
+  comment=[l]{\#},
+  morecomment=[n]{\#=}{=\#},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% General Listing Settings
+\lstset{
+    language=Julia,
+    backgroundcolor=\color{backcolour},   
+    basicstyle=\ttfamily\small,
+    breaklines=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    frame=single
+    extendedchars=true,
+    literate={π}{{$\pi$}}1 {γ}{{$\gamma$}}1
+}
 
 % ---------- Hyperref Setup ----------
 \hypersetup{
@@ -42,7 +75,6 @@
 \newcommand{\course}{ASEN 5264 -- DMU}
 \newcommand{\assignment}{Homework \#3}
 \newcommand{\studentname}{Bijan Jourabchi}
-\newcommand{\studentid}{Student ID}
 
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
@@ -78,12 +110,13 @@
     {\LARGE \textbf{\course}} \\[6pt]
     {\Large \assignment} \\[10pt]
     \studentname \\
-    ID: \studentid \\
 \end{center}
 
 \vspace{1em}
 \hrule
 \vspace{1em}
+
+
 
 % =====================================================
 \section{}
@@ -153,7 +186,7 @@
     \end{aligned}
     \]
 
-    Thus. the action which minimizes $Q^{\tilde{\pi}}(0.8,a)$ is \boxed{$a = 0.1$}.
+    Thus the action which minimizes $Q^{\tilde{\pi}}(0.8,a)$ is \boxed{$a = 0.1$}.
 
 \end{enumerate}
 
@@ -288,4 +321,597 @@ Given the following MDP:
 
 % =====================================================
 
+% =====================================================
+\section{}
+
+\begin{enumerate} [label=\alph*)]
+    \item
+        Using the code provided to us, I was able to achieve a mean discounted reward estimate of $-95.63$ reward units with $260$ Monte Carlo trials.
+        To compute the SEM, I used the following formula, 
+        \[
+            SEM = \frac{\sigma}{\sqrt{n}}
+        \]
+        where $\sigma$ is the standard deviation of the reward estimate, and $n$ is the number of Monte Carlo trials. With $n = 260$ MC trials, I achieved an 
+        $SEM = 4.98$.
+        
+    \item 
+        Given the information that goal cells were 20 cells apart, i.e. at $[20,20]$, $[20,40]$, $[40,20]$, etc. I 
+        created a heuristic policy which given a state $s$, first finds the closest goal cell in the $60x \times 60$ grid, then chooses the appropriate
+        action in order to move towards that goal cell. Code for my heuristic policy can be seen in the smart\_policy function below. Using again $n = 260$ MC trials,
+        I was able to achieve a mean discounted reward estimate of $-29.30$ and a $SEM = 3.75$.
+\end{enumerate}
+
+\subsection{Code For Problem 3}
+
+
+\begin{lstlisting}
+using DMUStudent.HW3: HW3, DenseGridWorld, visualize_tree
+using POMDPs: actions, @gen, isterminal, discount, statetype, actiontype, simulate, states, initialstate
+using D3Trees: inchrome, inbrowser
+using StaticArrays: SA
+using Statistics: mean, std
+using BenchmarkTools: @btime
+
+m = HW3.DenseGridWorld(seed = 3)
+
+function rollout(mdp, policy_function, s0, max_steps=100)
+    r_total = 0.0
+    t = 0
+    s = s0
+    while !isterminal(mdp, s) && t < max_steps
+        a = policy_function(mdp, s) # replace this with a policy
+        s, r = @gen(:sp,:r)(mdp, s, a)
+        r_total += discount(m)^t*r
+        t += 1
+    end
+    return r_total # replace this with the reward
+end
+
+### Part a)
+function heuristic_policy(m, s)
+    # put a smarter heuristic policy here
+    return rand(actions(m))
+end
+
+function smart_policy(m,s)
+    x,y = s
+
+    AS = [
+        (:down, (x, y-1)),
+        (:up, (x, y+1)),
+        (:right, (x+1, y)),
+        (:left, (x-1, y))
+    ]
+
+
+    # Find closest goal from CURRENT state
+    goals = [[20,20], [20,40], [40,20], [40,40]]
+    closest_goal_cell = goals[argmin([sqrt((x - g[1])^2 + (y - g[2])^2) for g in goals])]
+    #@show s
+    #@show closest_goal_cell
+    
+    # Find which next state is closest to that goal
+    distances_to_goal = [sqrt((next_s[1] - closest_goal_cell[1])^2 + (next_s[2] - closest_goal_cell[2])^2) for (a,next_s) in AS]
+
+    #@show distances_to_goal
+    #@show AS[argmin(distances_to_goal)][1]
+    return AS[argmin(distances_to_goal)][1]
+
+end
+
+# This code runs monte carlo simulations: you can calculate the mean and standard error from the results
+# Part a)
+n = 260
+
+results = [rollout(m, heuristic_policy, rand(initialstate(m))) for _ in 1:n]
+
+@show mean(results)
+@show std(results)/sqrt(n)
+
+# part b)
+n = 260
+results = [rollout(m, smart_policy, rand(initialstate(m))) for _ in 1:n]
+
+@show mean(results)
+@show std(results)/sqrt(n)
+
+\end{lstlisting}
+% =====================================================
+\section{}
+
+After 7 iterations of Monte Carlo Tree Search with a depth of 100 and c = 2, we get the tree seen in Figure \ref{fig:MCTS}.
+The actions which lead to the highest Q values from the starting state are the up and right actions. This is because these 
+actions move the state closest the goal cell at $[20,20]$. Since I used my heuristic policy outlined in problem 3 for the rollout
+simulation in MCTS, these actions will be selected the most, which we also see in the tree. Note that the value I chose for c was arbitrarily chosen
+with no tuning. It was tuned in later porblems.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth, height=0.75\textheight, keepaspectratio]{MCTS_tree.png}
+    \caption{Monte Carlo Tree Seach Decision Tree After 7 iterations}
+\label{fig:MCTS}
+\end{figure}
+
+\subsection{Code For Problem 4}
+\begin{lstlisting}
+
+using DMUStudent.HW3: HW3, DenseGridWorld, visualize_tree
+using POMDPs: actions, @gen, isterminal, discount, statetype, actiontype, simulate, states, initialstate
+using D3Trees: inchrome, inbrowser
+using StaticArrays: SA
+using Statistics: mean
+using BenchmarkTools: @btime
+
+############
+# Question 4
+############
+
+function rollout(mdp, policy_function, s0, max_steps=100)
+    r_total = 0.0
+    t = 0
+    s = s0
+    while !isterminal(mdp, s) && t < max_steps
+        a = policy_function(mdp, s) # replace this with a policy
+        s, r = @gen(:sp,:r)(mdp, s, a)
+        r_total += discount(m)^t*r
+        t += 1
+    end
+    return r_total # replace this with the reward
+end
+
+
+
+function smart_policy(m,s)
+    x,y = s
+
+    AS = [
+        (:down, (x, y-1)),
+        (:up, (x, y+1)),
+        (:right, (x+1, y)),
+        (:left, (x-1, y))
+    ]
+
+
+    # Find closest goal from CURRENT state
+    goals = [[20,20], [20,40], [40,20], [40,40]]
+    closest_goal_cell = goals[argmin([sqrt((x - g[1])^2 + (y - g[2])^2) for g in goals])]
+    #@show s
+    #@show closest_goal_cell
+    
+    # Find which next state is closest to that goal
+    distances_to_goal = [sqrt((next_s[1] - closest_goal_cell[1])^2 + (next_s[2] - closest_goal_cell[2])^2) for (a,next_s) in AS]
+
+    #@show distances_to_goal
+    #@show AS[argmin(distances_to_goal)][1]
+    return AS[argmin(distances_to_goal)][1]
+
+end
+
+function simulate_MCTS(π, s, d = 100)
+    
+    # Unpack
+    m = π.m
+
+    if d <= 0 # Base case
+
+        return rollout(m, smart_policy, s) # U(s)
+    end
+
+    A = actions(m)
+    γ = discount(m)
+    
+    # If we haven't checked the actions at state s yet, assign all dict values to 0
+    if !haskey(n, (s, first(A))) 
+        for a in A
+            π.n[(s,a)] = 0
+            π.q[(s,a)] = 0.0
+
+        end
+        # Value funciton estimate
+        return rollout(m, smart_policy, s)
+    end
+
+    # Explore decision tree
+    a = explore(π,s)
+    sp, r = @gen(:sp,:r)(m, s, a)
+    Q = r + γ * simulate_MCTS(π, sp, d-1)
+
+    π.n[(s,a)] += 1
+    π.q[(s,a)] += (Q-π.q[(s,a)])/π.n[(s,a)]
+    tval = get(π.t, (s, a, sp), 0)
+    π.t[(s,a,sp)] = tval + 1
+
+    return Q
+end
+
+function explore(π, s)
+    m = π.m
+    n = π.n
+    q = π.q
+    c = π.c
+    A = actions(m)
+
+    bonus = (Nsa, Ns) -> Nsa == 0 ? Inf : sqrt(log(Ns)/Nsa)
+    Ns = sum(n[(s,a)] for a in A)
+    return argmax(a -> q[(s,a)] + c*bonus(n[(s,a)], Ns), A)
+
+end
+
+m = DenseGridWorld()
+
+S = statetype(m)
+A = actiontype(m)
+
+# These would be appropriate containers for your Q, N, and t dictionaries:
+n = Dict{Tuple{S, A}, Int}()
+q = Dict{Tuple{S, A}, Float64}()
+t = Dict{Tuple{S, A, S}, Int}()
+c = 2
+
+mutable struct MCTS
+    m
+    n
+    q
+    t
+    c
+end
+
+π = MCTS(m,n,q,t,c)
+
+# This is an example state - it is a StaticArrays.SVector{2, Int}
+s = SA[19,19]
+
+@assert s isa statetype(m)
+
+for _ in 1:7
+    simulate_MCTS(π, s)
+end
+
+inchrome(visualize_tree(π.q, π.n, π.t, s))
+
+
+\end{lstlisting}
+
+% =====================================================
+\section{}
+
+\subsection{Code For Problem 5}
+
+Using my MCTS code from problem 4 I developed two new functions, policy\_, and eval\_online\_MCTS.
+The function policy\_ selects an actions based on the Q estimate provided by 1000 iterations of MCTS with a depth of 20.
+The function eval\_online\_MCTS runs the 100 100-step MC trials of our functions, terminating when a terminal state is reached.
+This resulted in a mean discounted reward of $-17.02$ and $SEM = 7.77$
+
+
+\begin{lstlisting}
+using DMUStudent.HW3: HW3, DenseGridWorld, visualize_tree
+using POMDPs: actions, @gen, isterminal, discount, statetype, actiontype, simulate, states, initialstate
+using D3Trees: inchrome, inbrowser
+using StaticArrays: SA
+using Statistics: mean, std
+using BenchmarkTools: @btime
+
+############
+# Question 5
+############
+
+
+### rollout sim from state s0
+function rollout(π, policy_function, s0, max_steps=20)
+    r_total = 0.0
+    t = 0
+    s = s0
+    while !isterminal(π.m, s) && t < max_steps
+        a = policy_function(π, s) # replace this with a policy
+        s, r = @gen(:sp,:r)(π.m, s, a)
+        r_total += discount(π.m)^t*r
+        t += 1
+    end
+    return r_total # replace this with the reward
+end
+
+
+### Policy for DenseGridWorld
+function smart_policy(m,s)
+    x,y = s
+
+    AS = [
+        (:down, (x, y-1)),
+        (:up, (x, y+1)),
+        (:right, (x+1, y)),
+        (:left, (x-1, y))
+    ]
+
+
+    # Find closest goal from CURRENT state
+    goals = [[20,20], [20,40], [40,20], [40,40]]
+    closest_goal_cell = goals[argmin([(x - g[1])^2 + (y - g[2])^2 for g in goals])]
+    #@show s
+    #@show closest_goal_cell
+    
+    # Find which next state is closest to that goal
+    distances_to_goal = [(next_s[1] - closest_goal_cell[1])^2 + (next_s[2] - closest_goal_cell[2])^2 for (a,next_s) in AS]
+
+    #@show distances_to_goal
+    #@show AS[argmin(distances_to_goal)][1]
+    return AS[argmin(distances_to_goal)][1]
+
+end
+
+### main MCTS simulation
+function simulate_MCTS(π, s, d = 100)
+    
+    # Unpack
+    m = π.m
+
+    if d <= 0 # Base case
+        return rollout(π, smart_policy, s) # U(s)
+    end
+
+    A = actions(m)
+    γ = discount(m)
+    
+    # If we haven't checked the actions at state s yet, assign all dict values to 0
+    if !haskey(π.n, (s, first(A))) 
+        for a in A
+            π.n[(s,a)] = 0
+            π.q[(s,a)] = 0.0
+
+        end
+        # Value funciton estimate
+        return rollout(π, smart_policy, s)
+    end
+
+    # Explore decision tree
+    a = explore(π,s)
+    sp, r = @gen(:sp,:r)(m, s, a)
+    Q = r + γ * simulate_MCTS(π, sp, d-1)
+
+    π.n[(s,a)] += 1
+    π.q[(s,a)] += (Q-π.q[(s,a)])/π.n[(s,a)]
+    tval = get(π.t, (s, a, sp), 0)
+    π.t[(s,a,sp)] = tval + 1
+
+    return Q
+end
+
+### Explore decision tree for mcts
+function explore(π, s)
+    m = π.m
+    n = π.n
+    q = π.q
+    c = π.c
+    A = actions(m)
+
+    bonus = (Nsa, Ns) -> Nsa == 0 ? Inf : sqrt(log(Ns)/Nsa)
+    Ns = sum(n[(s,a)] for a in A)
+    return argmax(a -> q[(s,a)] + c*bonus(n[(s,a)], Ns), A)
+
+end
+
+### Get an action based on MCTS tree
+function policy_(π, s)
+    for k in  1:1000
+        simulate_MCTS(π,s) # 1000 iterations to choose each action, d = 100 by default
+    end
+    return argmax(a -> π.q[(s,a)], actions(π.m))
+end
+
+function eval_online_MCTS(m)
+    all_rewards = []
+
+    for i in 1:100 # 100 MC simulations
+        
+        # Declare/Redeclare necessary params
+        n = Dict{Tuple{S, A}, Int}()
+        q = Dict{Tuple{S, A}, Float64}()
+        t = Dict{Tuple{S, A, S}, Int}()
+        c = sqrt(2)
+
+        π = MCTS(m ,n ,q ,t , c)
+
+        s = rand(initialstate(m))
+        total_reward = 0.0
+
+        for j in 1:100 # 100 step unless it reaches a terminal state
+            a = policy_(π,s) # Calls MCTS to plan next actions
+
+            sp, r = @gen(:sp,:r)(π.m, s, a) # Take the next step
+
+            total_reward += r
+
+            s = sp
+
+            if isterminal(m,s) break end# Break out, run next trial
+
+        end
+
+        push!(all_rewards, total_reward)
+    
+    end
+
+    return all_rewards
+
+end
+
+m = DenseGridWorld()
+
+S = statetype(m)
+A = actiontype(m)
+
+# These would be appropriate containers for your Q, N, and t dictionaries:
+n = Dict{Tuple{S, A}, Int}()
+q = Dict{Tuple{S, A}, Float64}()
+t = Dict{Tuple{S, A, S}, Int}()
+c = sqrt(2)
+
+mutable struct MCTS
+    m
+    n
+    q
+    t
+    c
+end
+
+results = eval_online_MCTS(m)
+
+@show mean(results)
+@show std(results)/sqrt(100)
+
+\end{lstlisting}
+
+% =====================================================
+\section{}
+
+For the challange problem, I mainly focused on tuning the value of c so that my code would reach a score of 50. I opted to stick with the MCTS code developed in 
+problem 4, as well as the rollout policy I implemented in problem 3. I modified the rollout policy to account for the added goal cells that came with the larger grid world. While this rollout policy
+may be slow, as it includes loops over the goal cells and actions, I wanted a policy that was likely close to the optimal policy, and it likely did not cause much of a slow down in compute. As mentioned earlier, I mainly
+focused on tuning c for my MCTS code to meet the requirements. I began with the value I initially started with, $c = \sqrt{2}$ and increased the order by 10 until it achieved a score of 50. I chose to increase the value of c instead of decreasing it because I believed that encouraging the tree to explore other actions 
+would result in the tree search trying the worse actions more often, get a lower value for Q, and ultimately end up choosing the best action in the function policy\_. I kept iterating this
+process until I recieved a score of 50, which I achieved with a value of $c = 100\sqrt{2}$. I chose to not vary depth as I found c to have a much larger impact on the tree's performance, thus I kept it at a value of 15.
+
+\subsection{Code For Problem 6}\
+\begin{lstlisting}
+using DMUStudent.HW3: HW3, DenseGridWorld, visualize_tree
+using POMDPs: actions, @gen, isterminal, discount, statetype, actiontype, simulate, states, initialstate
+using D3Trees: inchrome, inbrowser
+using StaticArrays: SA
+using Statistics: mean, std
+using BenchmarkTools: @btime
+
+############
+# Question 6
+############
+
+
+### rollout sim from state s0
+function rollout(π, policy_function, s0, max_steps=100)
+    r_total = 0.0
+    t = 0
+    s = s0
+    while !isterminal(π.m, s) && t < max_steps
+        a = policy_function(π, s) # replace this with a policy
+        s, r = @gen(:sp,:r)(π.m, s, a)
+        r_total += discount(π.m)^t*r
+        t += 1
+    end
+    return r_total # replace this with the reward
+end
+
+
+### Policy for DenseGridWorld
+function smart_policy(m,s)
+    x,y = s
+
+    AS = [
+        (:down, (x, y-1)),
+        (:up, (x, y+1)),
+        (:right, (x+1, y)),
+        (:left, (x-1, y))
+    ]
+
+
+    # Find closest goal from CURRENT state
+    goals = [[20,20], [20,40], [20,60], [20,80], [40,20], [40,40], [40,60], [40,80],[60,20], [60,40], [60,60], [60,80],[80,20], [80,40], [80,60], [80,80]]
+    closest_goal_cell = goals[argmin([(x - g[1])^2 + (y - g[2])^2 for g in goals])]
+    #@show s
+    #@show closest_goal_cell
+    
+    # Find which next state is closest to that goal
+    distances_to_goal = [(next_s[1] - closest_goal_cell[1])^2 + (next_s[2] - closest_goal_cell[2])^2 for (a,next_s) in AS]
+
+    #@show distances_to_goal
+    #@show AS[argmin(distances_to_goal)][1]
+    return AS[argmin(distances_to_goal)][1]
+
+end
+
+### main MCTS simulation
+function simulate_MCTS(π, s, d = 15)
+    
+    # Unpack
+    m = π.m
+
+    if d <= 0 # Base case
+        return rollout(π, smart_policy, s) # U(s)
+    end
+
+    A = actions(m)
+    γ = discount(m)
+    
+    # If we haven't checked the actions at state s yet, assign all dict values to 0
+    if !haskey(π.n, (s, first(A))) 
+        for a in A
+            π.n[(s,a)] = 0
+            π.q[(s,a)] = 0.0
+
+        end
+        # Value funciton estimate
+        return rollout(π, smart_policy, s)
+    end
+
+    # Explore decision tree
+    a = explore(π,s)
+    sp, r = @gen(:sp,:r)(m, s, a)
+    Q = r + γ * simulate_MCTS(π, sp, d-1)
+
+    π.n[(s,a)] += 1
+    π.q[(s,a)] += (Q-π.q[(s,a)])/π.n[(s,a)]
+    tval = get(π.t, (s, a, sp), 0)
+    π.t[(s,a,sp)] = tval + 1
+
+    return Q
+end
+
+### Explore decision tree for mcts
+function explore(π, s)
+    m = π.m
+    n = π.n
+    q = π.q
+    c = π.c
+    A = actions(m)
+
+    bonus = (Nsa, Ns) -> Nsa == 0 ? Inf : sqrt(log(Ns)/Nsa)
+    Ns = sum(n[(s,a)] for a in A)
+    return argmax(a -> q[(s,a)] + c*bonus(n[(s,a)], Ns), A)
+
+end
+
+### Get an action based on MCTS tree
+function select_action(m, s)
+    S = statetype(m)
+    A = actiontype(m)
+
+    # These would be appropriate containers for your Q, N, and t dictionaries:
+    n = Dict{Tuple{S, A}, Int}()
+    q = Dict{Tuple{S, A}, Float64}()
+    t = Dict{Tuple{S, A, S}, Int}()
+    c = sqrt(2)*100
+
+    π = MCTS(m,n,q,t,c)
+
+    for k in  1:1000
+        simulate_MCTS(π,s) # 1000 iterations to choose each action, d = 100 by default
+    end
+    return argmax(a -> π.q[(s,a)], actions(π.m))
+end
+
+m = DenseGridWorld()
+
+mutable struct MCTS
+    m
+    n
+    q
+    t
+    c
+end
+
+s0 = rand(initialstate(m))
+a = select_action(m, s0)
+
+@show s0
+@show a
+
+HW3.evaluate(select_action,"bijan.jourabchi@colorado.edu")
+\end{lstlisting}
 \end{document}

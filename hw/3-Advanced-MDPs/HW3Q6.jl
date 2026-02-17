@@ -112,7 +112,7 @@ function select_action(m, s)
     n = Dict{Tuple{S, A}, Int}()
     q = Dict{Tuple{S, A}, Float64}()
     t = Dict{Tuple{S, A, S}, Int}()
-    c = sqrt(2)
+    c = sqrt(2)*100
 
     π = MCTS(m,n,q,t,c)
 

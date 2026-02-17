@@ -111,23 +111,41 @@ function policy_(π, s)
     return argmax(a -> π.q[(s,a)], actions(π.m))
 end
 
-function online_rollout(m,n,q,t,c)
-    ### Rollout simulation
+function eval_online_MCTS(m)
+    all_rewards = []
 
-    r_hist = []
-
-    for j in 1:100
+    for i in 1:100 # 100 MC simulations
         
-        println("j = ", j)
+        # Declare/Redeclare necessary params
+        n = Dict{Tuple{S, A}, Int}()
+        q = Dict{Tuple{S, A}, Float64}()
+        t = Dict{Tuple{S, A, S}, Int}()
+        c = sqrt(2)
 
-        π = MCTS(m,n,q,t,c)
+        π = MCTS(m ,n ,q ,t , c)
+
         s = rand(initialstate(m))
+        total_reward = 0.0
 
-        r = rollout(π,policy_,s)
+        for j in 1:100 # 100 step unless it reaches a terminal state
+            a = policy_(π,s) # Calls MCTS to plan next actions
 
-        push!(r_hist,r)
+            sp, r = @gen(:sp,:r)(π.m, s, a) # Take the next step
+
+            total_reward += r
+
+            s = sp
+
+            if isterminal(π.m,s) break end# Break out, run next trial
+
+        end
+
+        push!(all_rewards, total_reward)
+    
     end
-    return r_hist
+
+    return all_rewards
+
 end
 
 m = DenseGridWorld()
@@ -149,7 +167,7 @@ mutable struct MCTS
     c
 end
 
-results = online_rollout(m,n,q,t,c)
+results = eval_online_MCTS(m)
 
 @show mean(results)
 @show std(results)/sqrt(100)

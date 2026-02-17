@@ -54,7 +54,7 @@ end
 
 # This code runs monte carlo simulations: you can calculate the mean and standard error from the results
 # Part a)
-n = 250
+n = 260
 
 results = [rollout(m, heuristic_policy, rand(initialstate(m))) for _ in 1:n]
 
@@ -62,7 +62,7 @@ results = [rollout(m, heuristic_policy, rand(initialstate(m))) for _ in 1:n]
 @show std(results)/sqrt(n)
 
 # part b)
-n = 250
+n = 260
 results = [rollout(m, smart_policy, rand(initialstate(m))) for _ in 1:n]
 
 @show mean(results)
