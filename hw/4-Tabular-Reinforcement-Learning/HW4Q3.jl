@@ -1,36 +1,34 @@
 using Flux
+using Flux.Losses: kldivergence
 using Plots
 using Statistics: mean
 using Plots.PlotMeasures: mm
 using ProgressMeter
+using Random
 
 f = x -> (1 - x) * sin(20 * log(x + 0.2))
 #f = x -> sin(x)
 
-function make_training_data(f; n_uniform=600, n_focus0=1400)
-    x_uniform = collect(range(0.0f0, 1.0f0, length=n_uniform))
-    t = collect(range(0.0f0, 1.0f0, length=n_focus0))
-    x_focus0 = t .^ 2
-    x_all = sort(unique(vcat(x_uniform, x_focus0)))
-
-    x = reshape(Float32.(x_all), 1, :)
-    y = reshape(Float32.(f.(x_all)), 1, :)
+function make_training_data(f)
+    x = collect(range(0,1,length=1000))
+    y = f.(x)
     return x, y
 end
 
 function lossfxn(m, x, y)
-    yhat = m(x)
-    return mean((yhat .- y) .^ 2)
+    return kldivergence(m(x), y)
 end
 
 function train(x_data, y_data; learning_rate=1e-3, n_epochs=1_000, save_every=50, minibatch_size=1)
-    x_data = ndims(x_data) == 1 ? reshape(x_data, 1, :) : x_data
-    y_data = ndims(y_data) == 1 ? reshape(y_data, 1, :) : y_data
+    x_data = ndims(x_data) == 1 ? reshape(Float32.(x_data), 1, :) : Float32.(x_data)
+    y_data = ndims(y_data) == 1 ? reshape(Float32.(y_data), 1, :) : Float32.(y_data)
     @assert size(x_data, 2) == size(y_data, 2) "x_data and y_data must have the same number of samples"
+    @assert minibatch_size >= 1 "minibatch_size must be >= 1"
 
     model = Chain(
         Dense(1=>32, tanh),
-        Dense(32=>32, tanh),
+        Dense(32=>64, tanh),
+        Dense(64=>32, tanh),
         Dense(32=>1)
     )
     opt_state = Flux.setup(Adam(learning_rate), model)
@@ -38,16 +36,18 @@ function train(x_data, y_data; learning_rate=1e-3, n_epochs=1_000, save_every=50
     losses = Float32[]
     models = [deepcopy(model)]
 
+
     n_samples = size(y_data, 2)
     n_minibatches = cld(n_samples, minibatch_size)
 
     @showprogress for epoch in 1:n_epochs
         batch_loss = zero(Float32)
+        perm = randperm(n_samples)
 
         for i in 1:n_minibatches
-            start_idx = minibatch_size * (i - 1) + 1
-            end_idx = min(minibatch_size * i, n_samples)
-            idxs = start_idx:end_idx
+            start_idx = (i - 1) * minibatch_size + 1
+            end_idx = min(i * minibatch_size, n_samples)
+            idxs = perm[start_idx:end_idx]
             x_minibatch = x_data[:, idxs]
             y_minibatch = y_data[:, idxs]
 
@@ -74,7 +74,22 @@ end
 
 x, y = make_training_data(f)
 
-models, losses = train(x, y; learning_rate=1e-1, n_epochs=3_000, minibatch_size=32)
+training_plot = plot(
+    vec(x), vec(y),
+    label="Training Data",
+    xlabel="x",
+    ylabel="f(x)",
+    title="Training Set",
+    linewidth=1.8,
+    marker=:circle,
+    markersize=2.5,
+    color=:navy,
+    legend=:topright,
+    gridalpha=0.25
+)
+savefig(training_plot, "training_set.png")
+
+models, losses = train(x, y; learning_rate=1e-3, n_epochs=3_000, minibatch_size=5)
 
 xs = collect(range(0.0f0, 1.0f0, length=100))
 truth_vals = f.(xs)
@@ -129,4 +144,4 @@ P = plot(
     dpi=150
 )
 
-display(P)
+savefig("NN_Fxn_Approx.png") 
