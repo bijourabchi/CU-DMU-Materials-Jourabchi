@@ -1,5 +1,5 @@
 using Flux
-using Flux.Losses: kldivergence
+using Flux.Losses: mse
 using Plots
 using Statistics: mean
 using Plots.PlotMeasures: mm
@@ -10,13 +10,14 @@ f = x -> (1 - x) * sin(20 * log(x + 0.2))
 #f = x -> sin(x)
 
 function make_training_data(f)
-    x = collect(range(0,1,length=1000))
+    x = collect(range(0,1,length=35))
+    vcat(x, 0.001)
     y = f.(x)
     return x, y
 end
 
 function lossfxn(m, x, y)
-    return kldivergence(m(x), y)
+    return mse(m(x), y)
 end
 
 function train(x_data, y_data; learning_rate=1e-3, n_epochs=1_000, save_every=50, minibatch_size=1)
@@ -37,17 +38,15 @@ function train(x_data, y_data; learning_rate=1e-3, n_epochs=1_000, save_every=50
     models = [deepcopy(model)]
 
 
-    n_samples = size(y_data, 2)
-    n_minibatches = cld(n_samples, minibatch_size)
+    n_minibatches = Int(length(y_data) / minibatch_size)
 
     @showprogress for epoch in 1:n_epochs
         batch_loss = zero(Float32)
-        perm = randperm(n_samples)
 
         for i in 1:n_minibatches
             start_idx = (i - 1) * minibatch_size + 1
-            end_idx = min(i * minibatch_size, n_samples)
-            idxs = perm[start_idx:end_idx]
+            end_idx = i * minibatch_size
+            idxs = start_idx:end_idx
             x_minibatch = x_data[:, idxs]
             y_minibatch = y_data[:, idxs]
 
@@ -87,9 +86,9 @@ training_plot = plot(
     legend=:topright,
     gridalpha=0.25
 )
-savefig(training_plot, "training_set.png")
+savefig("training_set.png")
 
-models, losses = train(x, y; learning_rate=1e-3, n_epochs=3_000, minibatch_size=5)
+models, losses = train(x, y; learning_rate=5e-4, n_epochs=10_000, minibatch_size=5)
 
 xs = collect(range(0.0f0, 1.0f0, length=100))
 truth_vals = f.(xs)
