@@ -88,7 +88,7 @@ training_plot = plot(
 )
 savefig("training_set.png")
 
-models, losses = train(x, y; learning_rate=5e-4, n_epochs=10_000, minibatch_size=5)
+models, losses = train(x, y; learning_rate=5e-4, n_epochs=20_000, minibatch_size=5)
 
 xs = collect(range(0.0f0, 1.0f0, length=100))
 truth_vals = f.(xs)
