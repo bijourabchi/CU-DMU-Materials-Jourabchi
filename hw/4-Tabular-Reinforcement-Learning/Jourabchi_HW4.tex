@@ -1,0 +1,177 @@
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,graphicx,enumitem,amssymb}
+\usepackage{mathtools}
+\usepackage{physics}        % derivatives, bras/kets, etc.
+\usepackage{siunitx}        % units
+\usepackage{graphicx}       % figures
+\usepackage{float}          % figure placement
+\usepackage{booktabs}       % nice tables
+\usepackage{enumitem}       % better lists
+\usepackage{fancyhdr}       % header/footer
+\usepackage{titlesec}       % section formatting
+\usepackage{hyperref}       % links
+\usepackage{tcolorbox}      % boxes for answers
+\usepackage{listings}       % code (MATLAB, Python, etc.)
+\usepackage{xcolor}
+\usepackage{bbm}        % blackboard bold italic
+
+% Define colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% ---------- Hyperref Setup ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% ---------- Header/Footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textbf{\course}}
+\rhead{\textbf{\assignment}}
+\cfoot{\thepage}
+
+% ---------- Custom Commands ----------
+\newcommand{\course}{ASEN 5264 - DMU}
+\newcommand{\assignment}{Homework \#4}
+\newcommand{\studentname}{Bijan Jourabchi}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+
+% Boxed answer environment
+\newtcolorbox{answerbox}{
+    colback=gray!5,
+    colframe=gray!50,
+    title=Answer,
+    fonttitle=\bfseries
+}
+
+% Problem section format
+\titleformat{\section}{\large\bfseries}{Problem \thesection:}{0.5em}{}
+
+% ---------- Code Style ----------
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{orange},
+    breaklines=true,
+    frame=single
+    extendedchars=true,
+    literate={π}{{$\pi$}}1 {γ}{{$\gamma$}}1
+}
+
+% ---------- Document ----------
+\begin{document}
+
+% ---------- Title Block ----------
+\begin{center}
+    {\LARGE \textbf{\course}} \\[6pt]
+    {\Large \assignment} \\[10pt]
+    \studentname \\
+\end{center}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+% Define Julia language manually
+\lstdefinelanguage{Julia}{
+  keywords={abstract, break, case, catch, const, continue, do, else, elseif,
+      end, export, false, for, function, global, if, import, in, let, local,
+      macro, module, otherwise, quote, return, struct, switch, true, try,
+      type, typealias, using, while, mutable},
+  keywordstyle=\color{blue}\bfseries,
+  comment=[l]{\#},
+  morecomment=[n]{\#=}{=\#},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% General Listing Settings
+\lstset{
+    language=Julia,
+    backgroundcolor=\color{backcolour},   
+    basicstyle=\ttfamily\small,
+    breaklines=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    frame=single
+}
+
+% =====================================================
+\section{}
+
+\begin{enumerate}[label=\alph*)]
+    \item 
+        After a large number of pulls, it is reasonable to assume that $\rho_a \to \theta_a$. However, since we are using an $\epsilon$-greedy
+        policy, we still choose randomly with probability $\epsilon$. With probability $1-\epsilon$ we will choose greedily, always picking arm 3. With $\epsilon = 0.15$, we can solve for the probability of pulling arm $a$.
+        \begin{align*}
+            P(a_1) = \epsilon/3 = 0.05 \\
+            P(a_2) = \epsilon/3 = 0.05 \\
+            P(a_3) = \epsilon/3 + 1 - \epsilon = 0.9
+        \end{align*}
+
+        The expected payoff per pull is given as $\mathbb{E}[R]$, where $\mathbb{E}[R]$ is given by:
+        \begin{align*}
+            \mathbb{E}[R] = \sum_{k=1}^{3} P(R_i)P(a_i) = 0.2*0.05+0.3*0.05+0.7*0.9 = \boxed{0.655}
+        \end{align*}
+    \item 
+        Again, after a large number of pulls, we have $\rho_a \to \theta_a$. A softmax policy tells us $P(a_3) \propto e^{\lambda\rho_3} = e^{5\theta_3}$.
+        In order to obtain a valid probability, we must multiply by a normalizing constant $\frac{1}{c}$ where $c = \sum_{k=1}^{3}e^{5\theta_k}$.
+        \begin{align*}
+            P(a_3) = \frac{e^{5\theta_3}}{\sum_{k=1}^{3}e^{5\theta_k}} = \frac{33.11}{40.32} = \boxed{0.821}
+        \end{align*} 
+    \item
+        Starting with a prior distribution Beta$(1,1)$, we update the distribution for each arm with Beta$(1+w,1+l)$ where $w$ and $l$ are the total number of wins and losses respectively. For each arm we have the following beliefs.
+
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=\textwidth, height=0.75\textheight, keepaspectratio]{Beta12.png}
+            \caption{Belief for arm 1}
+        \label{fig:A1}
+        \end{figure}
+                \begin{figure}[h]
+            \centering
+            \includegraphics[width=\textwidth, height=0.75\textheight, keepaspectratio]{Beta21.png}
+            \caption{Belief for arm 2}
+        \label{fig:A2}
+        \end{figure}
+                \begin{figure}[h]
+            \centering
+            \includegraphics[width=\textwidth, height=0.75\textheight, keepaspectratio]{Beta43.png}
+            \caption{Belief for arm 3}
+        \label{fig:A3}
+        \end{figure}
+        \newpage    
+    \item
+    
+    First, we would sample a value $\hat{\theta}_a$ from each belief distribution, then we would choose the arm which had the largest $\hat{\theta}_a$, that is $\arg\max_a \hat{\theta}_a$.
+        Some theoretical values that could be sampled are $\hat{\theta}_1 = 0.1$, $\hat{\theta}_2 = 0.8$, $\hat{\theta}_3 = 0.65$. In this case, Thompson sampling would choose arm 2, observe the outcome and update the belief for arm 2.  
+\end{enumerate}
+
+
+
+
+% =====================================================
+\section{}
+
+
+
+
+
+% =====================================================
+
+\end{document}
