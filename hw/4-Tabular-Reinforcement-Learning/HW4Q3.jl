@@ -10,7 +10,7 @@ f = x -> (1 - x) * sin(20 * log(x + 0.2))
 #f = x -> sin(x)
 
 function make_training_data(f)
-    x = collect(range(0,1,length=35))
+    x = collect(range(0,1,length=640))
     vcat(x, 0.001)
     y = f.(x)
     return x, y
@@ -27,9 +27,9 @@ function train(x_data, y_data; learning_rate=1e-3, n_epochs=1_000, save_every=50
     @assert minibatch_size >= 1 "minibatch_size must be >= 1"
 
     model = Chain(
-        Dense(1=>32, tanh),
-        Dense(32=>64, tanh),
-        Dense(64=>32, tanh),
+        Dense(1=>16, tanh),
+        Dense(16=>16, tanh),
+        Dense(16=>32, tanh),
         Dense(32=>1)
     )
     opt_state = Flux.setup(Adam(learning_rate), model)
@@ -88,7 +88,7 @@ training_plot = plot(
 )
 savefig("training_set.png")
 
-models, losses = train(x, y; learning_rate=5e-4, n_epochs=20_000, minibatch_size=5)
+models, losses = train(x, y; learning_rate=0.01, n_epochs=4_000, minibatch_size=64)
 
 xs = collect(range(0.0f0, 1.0f0, length=100))
 truth_vals = f.(xs)

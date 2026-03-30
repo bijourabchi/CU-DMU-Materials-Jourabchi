@@ -3,6 +3,8 @@ using QuickPOMDPs: QuickPOMDP
 using POMDPTools: Deterministic, Uniform, SparseCat, FunctionPolicy, RolloutSimulator
 using Statistics: mean
 import POMDPs
+using ElectronDisplay
+ElectronDisplay.CONFIG.single_window = true
 
 ##############
 # Instructions
@@ -154,7 +156,7 @@ HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], n_episodes=100) # you will need
 #----------
 
 # You can show an image of the environment like this (use ElectronDisplay if running from REPL):
-display(render(env))
+ElectronDisplay.display(render(env))
 
 # The following code allows you to render the value function
 using Plots
