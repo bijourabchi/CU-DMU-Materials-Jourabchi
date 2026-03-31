@@ -22,31 +22,53 @@ function loss(Q, Q_target, s, a_ind, r, sp, done)
     else return (r-Q(s)[a_ind])^2 end
 end
 
+function policy(env,s,eps,Q)
+    if rand() < eps
+        return rand(1:length(actions(env)))
+    else
+        
+        return argmax(i -> Q(s)[i], 1:length(actions(env)))
+    end
+end
+
+function simulate(env,Q)
+    reset!(env)
+    r_tot = 0
+    done = false
+    count = 0
+    eps = 0
+    MAX_STEPS = 1000
+
+    while !done && count < MAX_STEPS
+        s = observe(env)
+        a_ind = policy(env,s,eps, Q)
+        r = act!(env, actions(env)[a_ind])
+        sp = observe(env)
+        done = terminated(env)
+        r_tot += 0.99*r
+        s = sp
+        count += 1
+    end
+    return r_tot
+end
+
 function dqn(env)
     Q = Chain(Dense(2,128), relu,
             Dense(128, length(actions(env)))) # Tune as needed
     opt = Flux.setup(ADAM(0.0005), Q)
-    Q_target = deepcopy(Q)
 
-    N_EPSISODES = 3000
+    Q_target = deepcopy(Q)
+    N_EPSISODES = 2000
     MAX_STEPS = 10000
     WARMUP_STEPS = 2000 # Idea is to let it explore for a while to gain experience_tuples before training to ensure NN has data
     REPLAY_CAPACITY = 200_000
-    TRAIN_SAMPLES_PER_EPISODE = 1000
+    TRAIN_SAMPLES_PER_EPISODE = 2_000
 
     buffer = []
-    grad_steps = 0
-
-    function policy(s,eps)
-        if rand() < eps
-            return rand(1:length(actions(env)))
-        else
-            
-            return argmax(i -> Q(s)[i], 1:length(actions(env)))
-        end
-    end
+    
 
     @showprogress for i = 1:N_EPSISODES
+        
         reset!(env)
         count = 0
         eps = max(0.01, 1-i/N_EPSISODES)
@@ -55,7 +77,7 @@ function dqn(env)
         while !done && count < MAX_STEPS
             # Create our experience tuple
             s = observe(env)
-            a_ind = policy(s,eps)
+            a_ind = policy(env,s,eps,Q)
             r = act!(env, actions(env)[a_ind])
             sp = observe(env)
             done = terminated(env)
@@ -69,7 +91,16 @@ function dqn(env)
             count += 1
         end
         
-        Q_target = deepcopy(Q)
+        ## Save deepcopy only if Q policy is better than prev Q
+        r_now = simulate(env,Q)
+        r_trial = simulate(env,Q_target)
+
+        if r_now > r_trial # This will ensure Q_target is always a better Q than the previous one
+            print("\n Better Q, copying \n")
+            Q_target = deepcopy(Q)
+        else
+            print("\n Worse Q, skipping... \n")
+        end
 
         if length(buffer) >= WARMUP_STEPS
             n_updates = min(TRAIN_SAMPLES_PER_EPISODE, length(buffer))
