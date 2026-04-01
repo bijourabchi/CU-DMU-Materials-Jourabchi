@@ -45,11 +45,11 @@ function simulate(env,Q)
         r = act!(env, actions(env)[a_ind])
         sp = observe(env)
         done = terminated(env)
-        r_tot += 0.99*r
+        r_tot += (0.99^count) * r
         s = sp
         count += 1
     end
-    return r_tot
+    return r_tot / count
 end
 
 function dqn(env)
@@ -65,6 +65,7 @@ function dqn(env)
     TRAIN_SAMPLES_PER_EPISODE = 2_000
 
     buffer = []
+    learning_curve = Float64[]
     
 
     @showprogress for i = 1:N_EPSISODES
@@ -93,14 +94,17 @@ function dqn(env)
         
         ## Save deepcopy only if Q policy is better than prev Q
         r_now = simulate(env,Q)
+        
+        push!(learning_curve, r_now)
         r_trial = simulate(env,Q_target)
 
         if r_now > r_trial # This will ensure Q_target is always a better Q than the previous one
-            print("\n Better Q, copying \n")
+            
             Q_target = deepcopy(Q)
-        else
-            print("\n Worse Q, skipping... \n")
+
         end
+        
+        Q_target = deepcopy(Q)
 
         if length(buffer) >= WARMUP_STEPS
             n_updates = min(TRAIN_SAMPLES_PER_EPISODE, length(buffer))
@@ -112,14 +116,19 @@ function dqn(env)
                 Flux.update!(opt, Q, grads[1])
             end
         end
+
+        ## Stuff for learning curve
     end
-    return Q
+    return Q, learning_curve
 end
 
-Q = dqn(env)
+Q, learning_curve = dqn(env)
 
-@show HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], "bijan.jourabchi@colorado.edu") # you will need to remove the n_episodes=100 keyword argument and add your email as a positional argument to create a json file; evaluate needs to run 10_000 episodes to produce a json
-
+scr = HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], n_episodes=10_000).score
+println("\n score = $scr")
+if scr > 40
+    HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], "bijan.jourabchi@colorado.edu") # you will need to remove the n_episodes=100 keyword argument and add your email as a positional argument to create a json file; evaluate needs to run 10_000 episodes to produce a json
+end
 #----------
 # Rendering
 #----------
@@ -129,6 +138,15 @@ ElectronDisplay.display(render(env))
 
 # The following code allows you to render the value function
 using Plots
+lc_plot = plot(
+    1:length(learning_curve),
+    learning_curve,
+    xlabel="Episode",
+    ylabel="Average Return",
+    title="DQN Learning Curve",
+    label="Episode Return"
+)
+savefig(lc_plot, "DQN_LC.png")
 xs = -3.0f0:0.1f0:3.0f0
 vs = -0.3f0:0.01f0:0.3f0
 heatmap(xs, vs, (x, v) -> maximum(Q([x, v])), xlabel="Position (x)", ylabel="Velocity (v)", title="Max Q Value")
