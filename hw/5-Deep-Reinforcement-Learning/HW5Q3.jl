@@ -73,6 +73,7 @@ function dqn(env)
         reset!(env)
         count = 0
         eps = max(0.01, 1-i/N_EPSISODES)
+        episode_return = 0
         done = false
 
         while !done && count < MAX_STEPS
@@ -82,7 +83,7 @@ function dqn(env)
             r = act!(env, actions(env)[a_ind])
             sp = observe(env)
             done = terminated(env)
-
+            episode_return += r
             experience_tuple = (s, a_ind, r, sp, done)
             push!(buffer, experience_tuple)
             if length(buffer) > REPLAY_CAPACITY
@@ -95,7 +96,7 @@ function dqn(env)
         ## Save deepcopy only if Q policy is better than prev Q
         r_now = simulate(env,Q)
         
-        push!(learning_curve, r_now)
+        push!(learning_curve, episode_return)
         r_trial = simulate(env,Q_target)
 
         if r_now > r_trial # This will ensure Q_target is always a better Q than the previous one
@@ -126,9 +127,9 @@ Q, learning_curve = dqn(env)
 
 scr = HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], n_episodes=10_000).score
 println("\n score = $scr")
-if scr > 40
-    HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], "bijan.jourabchi@colorado.edu") # you will need to remove the n_episodes=100 keyword argument and add your email as a positional argument to create a json file; evaluate needs to run 10_000 episodes to produce a json
-end
+#if scr > 40
+#    HW5.evaluate(s->actions(env)[argmax(Q(s[1:2]))], "bijan.jourabchi@colorado.edu") # you will need to remove the n_episodes=100 keyword argument and add your email as a positional argument to create a json file; evaluate needs to run 10_000 episodes to produce a json
+#end
 #----------
 # Rendering
 #----------
@@ -142,7 +143,7 @@ lc_plot = plot(
     1:length(learning_curve),
     learning_curve,
     xlabel="Episode",
-    ylabel="Average Return",
+    ylabel="Expected Return",
     title="DQN Learning Curve",
     label="Episode Return"
 )
