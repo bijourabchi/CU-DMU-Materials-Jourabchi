@@ -148,6 +148,7 @@ lc_plot = plot(
     label="Episode Return"
 )
 savefig(lc_plot, "DQN_LC.png")
+
 xs = -3.0f0:0.1f0:3.0f0
 vs = -0.3f0:0.01f0:0.3f0
 heatmap(xs, vs, (x, v) -> maximum(Q([x, v])), xlabel="Position (x)", ylabel="Velocity (v)", title="Max Q Value")
