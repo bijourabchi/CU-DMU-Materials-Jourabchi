@@ -7,11 +7,11 @@ T = 1
 x = [F,T]
 y1 = [6,5]
 
-y2 = [7, 2]
+y2 = [9, 2]
 
 one_step = plot(
     x,y1,
-    yticks=0:1:8,
+    yticks=0:1:10,
     xlabel = "b(T)",
     ylabel = "Expected Reward",
     lw=3,
@@ -20,7 +20,7 @@ one_step = plot(
     ms=8,
     label = "Action = D",
     xlims = (-0.1,1.5),
-    ylims = (0,8),
+    ylims = (0,10),
     legend = :topright
 )
 
@@ -34,8 +34,8 @@ plot!(
 
 )
 
-plot!([F,F], [0,8], color = :black, lw=2,label = "b(T) = 0")
-plot!([T,T], [0,8], color = :black, lw=2,label = "b(T) = 1")
+plot!([F,F], [0,10], color = :black, lw=2,label = "b(T) = 0")
+plot!([T,T], [0,10], color = :black, lw=2,label = "b(T) = 1")
 
 savefig(one_step, "one_step.png")
 
@@ -48,12 +48,12 @@ T = 1
 x = [F,T]
 y1 = [6,5]
 
-y2 = [7, 2]
+y2 = [9, 2]
 y3 = [8, 4]
 
 two_step = plot(
     x,y1,
-    yticks=0:1:14,
+    yticks=0:1:10,
     xlabel = "b(T)",
     ylabel = "Expected Reward",
     lw=3,
@@ -62,7 +62,7 @@ two_step = plot(
     ms=8,
     label = "Action = D",
     xlims = (-0.1,1.5),
-    ylims = (0,14),
+    ylims = (0,10),
     legend = :topright
 )
 
@@ -86,6 +86,6 @@ plot!(
 
 )
 
-plot!([F,F], [0,14], color = :black, lw=2,label = "b(T) = 0")
-plot!([T,T], [0,14], color = :black, lw=2,label = "b(T) = 1")
+plot!([F,F], [0,10], color = :black, lw=2,label = "b(T) = 0")
+plot!([T,T], [0,10], color = :black, lw=2,label = "b(T) = 1")
 savefig(two_step, "two_step.png")
